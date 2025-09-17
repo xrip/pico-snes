@@ -88,13 +88,13 @@ void S9xFixColourBrightness()
       IPPU.Red [i] = IPPU.XB [PPU.CGDATA [i] & 0x1f];
       IPPU.Green [i] = IPPU.XB [(PPU.CGDATA [i] >> 5) & 0x1f];
       IPPU.Blue [i] = IPPU.XB [(PPU.CGDATA [i] >> 10) & 0x1f];
-      IPPU.ScreenColors [i] = BUILD_PIXEL(IPPU.Red [i], IPPU.Green [i], IPPU.Blue [i]);
+      IPPU.ScreenColors [i] = i; // BUILD_PIXEL(IPPU.Red [i], IPPU.Green [i], IPPU.Blue [i]);
       graphics_set_palette(i, RGB888(IPPU.Red [i], IPPU.Green [i], IPPU.Blue [i]));
    }
 
    for (size_t p = 0; p < 8; p++)
       for (size_t c = 0; c < 256; c++)
-         IPPU.DirectColors [p * 256 + c] = BUILD_PIXEL(((c & 7) << 2) | ((p & 1) << 1), ((c & 0x38) >> 1) | (p & 2), ((c & 0xc0) >> 3) | (p & 4)); /* XXX: Brightness */
+         IPPU.DirectColors [p * 256 + c] = c; //BUILD_PIXEL(((c & 7) << 2) | ((p & 1) << 1), ((c & 0x38) >> 1) | (p & 2), ((c & 0xc0) >> 3) | (p & 4)); /* XXX: Brightness */
 }
 
 /******************************************************************************/
