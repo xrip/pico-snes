@@ -1,19 +1,20 @@
 #include <stdio.h>
-
-#include "audio.h"
-#include "graphics.h"
 #include "snes9x.h"
-#include "hardware/clocks.h"
-#include "hardware/vreg.h"
-#include "hardware/structs/qmi.h"
-#include "pico/multicore.h"
-#include "pico/stdio.h"
+
 
 #if PICO_ON_DEVICE
 #include "pico.h"
 #include "hardware/gpio.h"
 #include "pico/time.h"
 #include "../sparkfun_pico/sfe_pico_alloc.h"
+#include "audio.h"
+#include "graphics.h"
+
+#include "hardware/clocks.h"
+#include "hardware/vreg.h"
+#include "hardware/structs/qmi.h"
+#include "pico/multicore.h"
+#include "pico/stdio.h"
 #else
 #include <windows.h>
 #include <stdalign.h>
@@ -238,7 +239,7 @@ DWORD WINAPI SoundThread(LPVOID lpParam) {
 
         // Wait until audio finishes playing
         while (currentHeader->dwFlags & WHDR_DONE) {
-            memcpy(currentHeader->lpData, audioBuffer, AUDIO_BUFFER_LENGTH * 2);
+            S9xMixSamples((void *) currentHeader->lpData, AUDIO_BUFFER_LENGTH * 2);
             waveOutWrite(hWaveOut, currentHeader, sizeof(WAVEHDR));
 
             currentHeader++;
@@ -275,10 +276,9 @@ int main(const int argc, char **argv) {
 
     CreateThread(NULL, 0, SoundThread, NULL, 0, NULL);
     while (true) {
-        // S9xMixSamples((void *) audioBuffer, AUDIO_BUFFER_LENGTH * 2);
         S9xMainLoop();
 
-        if (mfb_update(SCREEN, 120) == -1)
+        if (mfb_update(SCREEN, 60) == -1)
             exit(1);
 
     }

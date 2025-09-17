@@ -7,8 +7,13 @@
 #include "apu.h"
 #include "dma.h"
 #include "display.h"
-#include "graphics.h"
 #include "srtc.h"
+
+#if PICO_ON_DEVICE
+#include "graphics.h"
+#else
+#define graphics_set_palette(i, c) IPPU.ScreenColors [i] = BUILD_PIXEL(IPPU.Red [i], IPPU.Green [i], IPPU.Blue [i]);
+#endif
 
 extern const uint8_t mul_brightness [16][32];
 
