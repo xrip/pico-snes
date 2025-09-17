@@ -7,6 +7,7 @@
 #include "apu.h"
 #include "dma.h"
 #include "display.h"
+#include "graphics.h"
 #include "srtc.h"
 
 extern const uint8_t mul_brightness [16][32];
@@ -88,6 +89,7 @@ void S9xFixColourBrightness()
       IPPU.Green [i] = IPPU.XB [(PPU.CGDATA [i] >> 5) & 0x1f];
       IPPU.Blue [i] = IPPU.XB [(PPU.CGDATA [i] >> 10) & 0x1f];
       IPPU.ScreenColors [i] = BUILD_PIXEL(IPPU.Red [i], IPPU.Green [i], IPPU.Blue [i]);
+      graphics_set_palette(i, RGB888(IPPU.Red [i], IPPU.Green [i], IPPU.Blue [i]));
    }
 
    for (size_t p = 0; p < 8; p++)

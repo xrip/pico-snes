@@ -26,12 +26,16 @@
 
 int16_t __attribute__((aligned (4))) audioBuffer[AUDIO_BUFFER_LENGTH * 2];
 uint16_t __attribute__((aligned (4))) SCREEN[SNES_WIDTH * SNES_HEIGHT_EXTENDED];
+// uint16_t __attribute__((aligned (4))) SubScreen[SNES_WIDTH * SNES_HEIGHT_EXTENDED];
 
 
 bool S9xInitDisplay(void) {
     GFX.Pitch = SNES_WIDTH * sizeof(uint16_t);
     GFX.ZPitch = SNES_WIDTH;
+
     GFX.SubScreen = GFX.Screen = (uint8_t *) SCREEN;
+    // GFX.Screen = (uint8_t *) SCREEN;
+    // GFX.ZBuffer = (uint8_t *) SubScreen;
     GFX.ZBuffer = malloc(GFX.ZPitch * SNES_HEIGHT_EXTENDED);
     GFX.SubZBuffer = malloc(GFX.ZPitch * SNES_HEIGHT_EXTENDED);
     return true;
@@ -86,16 +90,11 @@ static inline void snes9x_init() {
 
     S9xInitGFX();
 
-    // S9xSetPlaybackRate(Settings.SoundPlaybackRate);
+    S9xSetPlaybackRate(Settings.SoundPlaybackRate);
 
     IPPU.RenderThisFrame = 1;
 }
 #if PICO_ON_DEVICE
-void _putchar(char character) {
-
-}
-// #define printf printf_
-// int printf_(const char* format, ...);
 
 static void memory_stats()
 {
@@ -111,25 +110,27 @@ static void memory_stats()
 void __time_critical_func(render_core)() {
     graphics_init();
 
-    graphics_set_buffer((uint8_t *) SCREEN, SNES_WIDTH, SNES_HEIGHT);
+    graphics_set_buffer((uint8_t *) SCREEN, SNES_WIDTH, SNES_HEIGHT_EXTENDED);
     graphics_set_textbuffer((uint8_t *) SCREEN);
     graphics_set_bgcolor(0x000000);
-    graphics_set_offset(0, 0);
+    graphics_set_offset(32, 0);
 
     graphics_set_flashmode(false, false);
     graphics_set_mode(GRAPHICSMODE_DEFAULT);
 }
 static inline void flash_timings() {
-    qmi_hw->m[0].timing = 0x60007304;
+    qmi_hw->m[0].timing = 0x60007305;
 }
 void main(){
     vreg_disable_voltage_limit();
-    vreg_set_voltage(VREG_VOLTAGE_1_60);
+    vreg_set_voltage(VREG_VOLTAGE_1_70);
     flash_timings();
     sleep_ms(100);
-    set_sys_clock_hz(378 * MHZ, 0); // fallback to failsafe clocks
+    set_sys_clock_hz(504 * MHZ, true); // fallback to failsafe clocks
     sleep_ms(100);
-        stdio_init_all();
+
+        // stdio_init_all();
+
     // Initialize onboard LED
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
@@ -171,11 +172,11 @@ void main(){
     multicore_launch_core1(render_core);
     int i = 0;
     while (true) {
-        // S9xMixSamples((void *) audioBuffer, AUDIO_BUFFER_LENGTH * 2);
+        S9xMixSamples((void *) audioBuffer, AUDIO_BUFFER_LENGTH * 2);
         S9xMainLoop();
-        sleep_ms(16);
-        gpio_put(PICO_DEFAULT_LED_PIN, i++ & 1);
-        printf("%i\n", i);
+        // sleep_ms(16);
+        // gpio_put(PICO_DEFAULT_LED_PIN, i++ & 1);
+        // printf("%i\n", i);
         tight_loop_contents();
     }
 }

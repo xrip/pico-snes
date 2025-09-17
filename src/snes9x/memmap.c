@@ -137,19 +137,18 @@ static void Sanitize(char* str, size_t bufsize)
 /**********************************************************************************************/
 bool S9xInitMemory(void)
 {
-   // Memory.RAM   = (uint8_t*)malloc(RAM_SIZE);
-   Memory.SRAM  = (uint8_t*)malloc(SRAM_SIZE);
-   // Memory.VRAM  = (uint8_t*)malloc(VRAM_SIZE);
-   Memory.FillRAM = (uint8_t*)malloc(0x8000);
-
+   IPPU.TileCache = (uint8_t*) calloc(MAX_2BIT_TILES, 128);
+   IPPU.TileCached = (uint8_t*) calloc(MAX_2BIT_TILES, 1);
    Memory.Map = (uint8_t**)calloc(MEMMAP_NUM_BLOCKS, sizeof(uint8_t*));
    Memory.MapInfo = (SMapInfo*)calloc(MEMMAP_NUM_BLOCKS, sizeof(SMapInfo));
 
    IPPU.ScreenColors = (uint16_t *)calloc(256 * 9, sizeof(uint16_t));
    IPPU.DirectColors = IPPU.ScreenColors + 256;
-   IPPU.TileCache = (uint8_t*) calloc(MAX_2BIT_TILES, 128);
-   IPPU.TileCached = (uint8_t*) calloc(MAX_2BIT_TILES, 1);
 
+   // Memory.RAM   = (uint8_t*)malloc(RAM_SIZE);
+   Memory.SRAM  = (uint8_t*)malloc(SRAM_SIZE);
+   // Memory.VRAM  = (uint8_t*)malloc(VRAM_SIZE);
+   Memory.FillRAM = (uint8_t*)malloc(0x8000);
    bytes0x2000 = (uint8_t *)malloc(0x2000);
 
    if (!!Memory.ROM) {
