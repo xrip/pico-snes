@@ -14,7 +14,7 @@
 #endif
 
 #ifndef INLINE
-#define INLINE inline
+#define INLINE __always_inline
 #endif
 
 #ifdef PSP
