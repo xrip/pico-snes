@@ -52,6 +52,7 @@ else ()
     pico_sdk_init()
 
     add_subdirectory(sparkfun_pico)
+    add_subdirectory(drivers/audio)
     add_subdirectory(drivers/hdmi)
     add_subdirectory(drivers/graphics)
 
@@ -62,6 +63,7 @@ else ()
             pico_multicore
             sparkfun_pico
 
+            audio
             graphics
             hdmi
 
@@ -70,6 +72,9 @@ else ()
 #    pico_set_printf_implementation(${PROJECT_NAME} none)
     target_compile_definitions(${PROJECT_NAME} PRIVATE
             HDMI
+            AUDIO_DATA_PIN=26
+            AUDIO_CLOCK_PIN=27
+
             # Core definitions
 #            PICO_PRINTF_ALWAYS_INCLUDED=0
             PICO_PANIC_FUNCTION=

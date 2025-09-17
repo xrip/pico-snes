@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "audio.h"
 #include "graphics.h"
 #include "snes9x.h"
 #include "hardware/clocks.h"
@@ -106,8 +107,16 @@ static void memory_stats()
     size_t max_block = sfe_mem_max_free_size();
     printf("\tMax free block size: 0x%X (%u) \n", max_block, max_block);
 }
+i2s_config_t i2s_config;
 /* Renderer loop on Pico's second core */
 void __time_critical_func(render_core)() {
+    i2s_config = i2s_get_default_config();
+    i2s_config.sample_freq = AUDIO_SAMPLE_RATE;
+    i2s_config.dma_trans_count = AUDIO_SAMPLE_RATE / 60;
+    i2s_volume(&i2s_config, 0);
+    i2s_init(&i2s_config);
+
+
     graphics_init();
 
     graphics_set_buffer((uint8_t *) SCREEN, SNES_WIDTH, SNES_HEIGHT_EXTENDED);
@@ -117,6 +126,11 @@ void __time_critical_func(render_core)() {
 
     graphics_set_flashmode(false, false);
     graphics_set_mode(GRAPHICSMODE_DEFAULT);
+
+    while (true) {
+        i2s_dma_write(&i2s_config, (const int16_t *) audioBuffer);
+        busy_wait_us(16666);
+    }
 }
 static inline void flash_timings() {
     qmi_hw->m[0].timing = 0x60007305;
