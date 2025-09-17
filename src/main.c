@@ -1,0 +1,272 @@
+#include <stdio.h>
+
+#include "graphics.h"
+#include "snes9x.h"
+#include "hardware/clocks.h"
+#include "hardware/vreg.h"
+#include "hardware/structs/qmi.h"
+#include "pico/multicore.h"
+#include "pico/stdio.h"
+
+#if PICO_ON_DEVICE
+#include "pico.h"
+#include "hardware/gpio.h"
+#include "pico/time.h"
+#include "../sparkfun_pico/sfe_pico_alloc.h"
+#else
+#include <windows.h>
+#include <stdalign.h>
+#include "win32/MiniFB.h"
+#endif
+
+#include "rom.h"
+
+#define AUDIO_SAMPLE_RATE   (32000)
+#define AUDIO_BUFFER_LENGTH (AUDIO_SAMPLE_RATE / 60 + 1)
+
+int16_t __attribute__((aligned (4))) audioBuffer[AUDIO_BUFFER_LENGTH * 2];
+uint16_t __attribute__((aligned (4))) SCREEN[SNES_WIDTH * SNES_HEIGHT_EXTENDED];
+
+
+bool S9xInitDisplay(void) {
+    GFX.Pitch = SNES_WIDTH * sizeof(uint16_t);
+    GFX.ZPitch = SNES_WIDTH;
+    GFX.SubScreen = GFX.Screen = (uint8_t *) SCREEN;
+    GFX.ZBuffer = malloc(GFX.ZPitch * SNES_HEIGHT_EXTENDED);
+    GFX.SubZBuffer = malloc(GFX.ZPitch * SNES_HEIGHT_EXTENDED);
+    return true;
+}
+
+void S9xDeinitDisplay(void) {
+}
+
+uint32_t S9xReadJoypad(const int32_t port) {
+    if (port != 0)
+        return 0;
+
+    uint32_t joypad = 0;
+
+    return joypad;
+}
+
+bool S9xReadMousePosition(int32_t which1, int32_t *x, int32_t *y, uint32_t *buttons) {
+    return false;
+}
+
+bool S9xReadSuperScopePosition(int32_t *x, int32_t *y, uint32_t *buttons) {
+    return false;
+}
+
+bool JustifierOffscreen(void) {
+    return true;
+}
+
+void JustifierButtons(uint32_t *justifiers) {
+    (void) justifiers;
+}
+
+static inline void snes9x_init() {
+    Settings.CyclesPercentage = 100;
+    Settings.H_Max = SNES_CYCLES_PER_SCANLINE;
+    Settings.FrameTimePAL = 20000;
+    Settings.FrameTimeNTSC = 16667;
+    Settings.ControllerOption = SNES_JOYPAD;
+    Settings.HBlankStart = (256 * Settings.H_Max) / SNES_HCOUNTER_MAX;
+    Settings.SoundPlaybackRate = AUDIO_SAMPLE_RATE;
+    Settings.DisableSoundEcho = false;
+    Settings.InterpolatedSound = true;
+
+    S9xInitDisplay();
+
+    S9xInitMemory();
+
+    S9xInitAPU();
+
+    S9xInitSound(0, 0);
+
+    S9xInitGFX();
+
+    // S9xSetPlaybackRate(Settings.SoundPlaybackRate);
+
+    IPPU.RenderThisFrame = 1;
+}
+#if PICO_ON_DEVICE
+void _putchar(char character) {
+
+}
+// #define printf printf_
+// int printf_(const char* format, ...);
+
+static void memory_stats()
+{
+    size_t mem_size = sfe_mem_size();
+    size_t mem_used = sfe_mem_used();
+    printf("\tMemory pool - Total: 0x%X (%u)  Used: 0x%X (%u) - %3.2f%%\n", mem_size, mem_size, mem_used, mem_used,
+           (float)mem_used / (float)mem_size * 100.0);
+
+    size_t max_block = sfe_mem_max_free_size();
+    printf("\tMax free block size: 0x%X (%u) \n", max_block, max_block);
+}
+/* Renderer loop on Pico's second core */
+void __time_critical_func(render_core)() {
+    graphics_init();
+
+    graphics_set_buffer((uint8_t *) SCREEN, SNES_WIDTH, SNES_HEIGHT);
+    graphics_set_textbuffer((uint8_t *) SCREEN);
+    graphics_set_bgcolor(0x000000);
+    graphics_set_offset(0, 0);
+
+    graphics_set_flashmode(false, false);
+    graphics_set_mode(GRAPHICSMODE_DEFAULT);
+}
+static inline void flash_timings() {
+    qmi_hw->m[0].timing = 0x60007304;
+}
+void main(){
+    vreg_disable_voltage_limit();
+    vreg_set_voltage(VREG_VOLTAGE_1_60);
+    flash_timings();
+    sleep_ms(100);
+    set_sys_clock_hz(378 * MHZ, 0); // fallback to failsafe clocks
+    sleep_ms(100);
+        stdio_init_all();
+    // Initialize onboard LED
+    gpio_init(PICO_DEFAULT_LED_PIN);
+    gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+
+    if (!sfe_pico_alloc_init()) {
+        while (true) {
+            sleep_ms(15);
+            gpio_put(PICO_DEFAULT_LED_PIN, 1);
+            sleep_ms(15);
+            gpio_put(PICO_DEFAULT_LED_PIN, 0);
+            printf("PSRAM ERROR!\n");
+        }
+    }
+
+    uint8_t *temp = (uint8_t *) malloc(1024);
+    // LED startup sequence
+    for (int i = 20; i--;) {
+        sleep_ms(25);
+        temp[i] = !(i & 1);
+        gpio_put(PICO_DEFAULT_LED_PIN, temp[i] ^ 1);
+        printf("%d...\n", i);
+    }
+
+    free(temp);
+    const size_t rom_size = sizeof(rom);
+    Memory.ROM_AllocSize = rom_size;
+    // Memory.ROM = (uint8_t *) malloc(rom_size);
+    Memory.ROM = (uint8_t * )&rom;
+    if (!Memory.ROM) {
+        while (1) printf("Allocation failed!");
+    }
+    // memcpy(Memory.ROM, rom, rom_size);
+
+    snes9x_init();
+    gpio_put(PICO_DEFAULT_LED_PIN, 1);
+    memcpy(Memory.ROM, rom, rom_size);
+    LoadROM(NULL);
+
+    multicore_launch_core1(render_core);
+    int i = 0;
+    while (true) {
+        // S9xMixSamples((void *) audioBuffer, AUDIO_BUFFER_LENGTH * 2);
+        S9xMainLoop();
+        sleep_ms(16);
+        gpio_put(PICO_DEFAULT_LED_PIN, i++ & 1);
+        printf("%i\n", i);
+        tight_loop_contents();
+    }
+}
+#else
+void HandleInput(WPARAM wParam, BOOL isKeyDown) {
+}
+
+DWORD WINAPI SoundThread(LPVOID lpParam) {
+    WAVEHDR waveHeaders[4];
+
+    WAVEFORMATEX format = { 0 };
+    format.wFormatTag = WAVE_FORMAT_PCM;
+    format.nChannels = 2;
+    format.nSamplesPerSec = AUDIO_SAMPLE_RATE;
+    format.wBitsPerSample = 16;
+    format.nBlockAlign = format.nChannels * format.wBitsPerSample / 8;
+    format.nAvgBytesPerSec = format.nSamplesPerSec * format.nBlockAlign;
+
+    HANDLE waveEvent = CreateEvent(NULL, 1, 0, NULL);
+
+    HWAVEOUT hWaveOut;
+    waveOutOpen(&hWaveOut, WAVE_MAPPER, &format, (DWORD_PTR) waveEvent, 0, CALLBACK_EVENT);
+
+    for (size_t i = 0; i < 4; i++) {
+        int16_t audio_buffers[4][AUDIO_BUFFER_LENGTH * 2];
+        waveHeaders[i] = (WAVEHDR) {
+            .lpData = (char *) audio_buffers[i],
+            .dwBufferLength = AUDIO_BUFFER_LENGTH * 2,
+    };
+        waveOutPrepareHeader(hWaveOut, &waveHeaders[i], sizeof(WAVEHDR));
+        waveHeaders[i].dwFlags |= WHDR_DONE;
+    }
+    WAVEHDR *currentHeader = waveHeaders;
+
+
+    while (true) {
+        if (WaitForSingleObject(waveEvent, INFINITE)) {
+            fprintf(stderr, "Failed to wait for event.\n");
+            return 1;
+        }
+
+        if (!ResetEvent(waveEvent)) {
+            fprintf(stderr, "Failed to reset event.\n");
+            return 1;
+        }
+
+        // Wait until audio finishes playing
+        while (currentHeader->dwFlags & WHDR_DONE) {
+            memcpy(currentHeader->lpData, audioBuffer, AUDIO_BUFFER_LENGTH * 2);
+            waveOutWrite(hWaveOut, currentHeader, sizeof(WAVEHDR));
+
+            currentHeader++;
+            if (currentHeader == waveHeaders + 4) { currentHeader = waveHeaders; }
+        }
+    }
+    return 0;
+}
+
+
+int main(const int argc, char **argv) {
+    const int scale = argc > 2 ? atoi(argv[2]) : 4;
+
+    if (!argv[1]) {
+        printf("Usage: dendy.exe <rom.bin> [scale_factor]\n");
+        return EXIT_FAILURE;
+    }
+
+    const char *filename = argv[1];
+
+    Memory.ROM = (uint8_t *) malloc(sizeof(rom));
+    snes9x_init();
+
+    memcpy(Memory.ROM, rom, sizeof(rom));
+    Memory.ROM_AllocSize = sizeof(rom);
+    LoadROM(NULL);
+
+    // if (!LoadROM(filename))
+        // printf("ROM loading failed!");
+
+    if (!mfb_open("SNES", SNES_WIDTH, SNES_HEIGHT, scale))
+        return EXIT_FAILURE;
+
+
+    CreateThread(NULL, 0, SoundThread, NULL, 0, NULL);
+    while (true) {
+        // S9xMixSamples((void *) audioBuffer, AUDIO_BUFFER_LENGTH * 2);
+        S9xMainLoop();
+
+        if (mfb_update(SCREEN, 120) == -1)
+            exit(1);
+
+    }
+}
+#endif
