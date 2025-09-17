@@ -35,7 +35,7 @@ add_compile_options(
         -ffunction-sections
         -fdata-sections
         -fms-extensions
-#        -O3
+        -O3
 )
 
 if (PICO_PLATFORM STREQUAL "host")

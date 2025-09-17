@@ -34,7 +34,8 @@ bool S9xInitDisplay(void) {
     GFX.Pitch = SNES_WIDTH * sizeof(uint16_t);
     GFX.ZPitch = SNES_WIDTH;
 
-    GFX.SubScreen = GFX.Screen = (uint8_t *) SCREEN;
+
+        GFX.SubScreen = GFX.Screen = (uint8_t *) SCREEN;
     // GFX.Screen = (uint8_t *) SCREEN;
     // GFX.ZBuffer = (uint8_t *) SubScreen;
     GFX.ZBuffer = malloc(GFX.ZPitch * SNES_HEIGHT_EXTENDED);
@@ -128,6 +129,7 @@ void __time_critical_func(render_core)() {
     graphics_set_mode(GRAPHICSMODE_DEFAULT);
 
     while (true) {
+        S9xMixSamples((void *) audioBuffer, AUDIO_BUFFER_LENGTH * 2);
         i2s_dma_write(&i2s_config, (const int16_t *) audioBuffer);
         busy_wait_us(16666);
     }
@@ -159,23 +161,20 @@ void main(){
         }
     }
 
-    uint8_t *temp = (uint8_t *) malloc(1024);
     // LED startup sequence
     for (int i = 20; i--;) {
         sleep_ms(25);
-        temp[i] = !(i & 1);
-        gpio_put(PICO_DEFAULT_LED_PIN, temp[i] ^ 1);
+        gpio_put(PICO_DEFAULT_LED_PIN, i ^ 1);
         printf("%d...\n", i);
     }
 
-    free(temp);
     const size_t rom_size = sizeof(rom);
     Memory.ROM_AllocSize = rom_size;
     // Memory.ROM = (uint8_t *) malloc(rom_size);
     Memory.ROM = (uint8_t * )&rom;
-    if (!Memory.ROM) {
-        while (1) printf("Allocation failed!");
-    }
+    // if (!Memory.ROM) {
+        // while (1) printf("Allocation failed!");
+    // }
     // memcpy(Memory.ROM, rom, rom_size);
 
     snes9x_init();
@@ -186,7 +185,7 @@ void main(){
     multicore_launch_core1(render_core);
     int i = 0;
     while (true) {
-        S9xMixSamples((void *) audioBuffer, AUDIO_BUFFER_LENGTH * 2);
+
         S9xMainLoop();
         // sleep_ms(16);
         // gpio_put(PICO_DEFAULT_LED_PIN, i++ & 1);
