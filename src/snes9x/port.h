@@ -14,7 +14,11 @@
 #endif
 
 #ifndef INLINE
+#if PICO_ON_DEVICE
 #define INLINE __always_inline
+#else
+#define INLINE inline
+#endif
 #endif
 
 #ifdef PSP

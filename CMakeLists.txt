@@ -53,25 +53,28 @@ else ()
 
     add_subdirectory(sparkfun_pico)
     add_subdirectory(drivers/audio)
-    add_subdirectory(drivers/hdmi)
-    add_subdirectory(drivers/graphics)
+#    add_subdirectory(drivers/hdmi)
+#    add_subdirectory(drivers/graphics)
+    add_subdirectory(drivers/ntsc-tv)
 
     add_executable(${PROJECT_NAME} ${SRC} src/main.c)
 
     target_link_libraries(${PROJECT_NAME} PRIVATE
             pico_runtime
             pico_multicore
+
             sparkfun_pico
 
             audio
             graphics
-            hdmi
+#            hdmi
 
             -Wl,--wrap=atexit,--wrap=abort,--strip-all,--gc-sections # size optimizations
     )
 #    pico_set_printf_implementation(${PROJECT_NAME} none)
     target_compile_definitions(${PROJECT_NAME} PRIVATE
             HDMI
+            AUDIO_PWM_PIN=26
             AUDIO_DATA_PIN=26
             AUDIO_CLOCK_PIN=27
 

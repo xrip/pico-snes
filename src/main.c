@@ -28,19 +28,14 @@
 
 int16_t __attribute__((aligned (4))) audioBuffer[AUDIO_BUFFER_LENGTH * 2];
 uint16_t __attribute__((aligned (4))) SCREEN[SNES_WIDTH * SNES_HEIGHT_EXTENDED];
-// uint16_t __attribute__((aligned (4))) SubScreen[SNES_WIDTH * SNES_HEIGHT_EXTENDED];
-
 
 bool S9xInitDisplay(void) {
     GFX.Pitch = SNES_WIDTH * sizeof(uint16_t);
     GFX.ZPitch = SNES_WIDTH;
-
-
-        GFX.SubScreen = GFX.Screen = (uint8_t *) SCREEN;
-    // GFX.Screen = (uint8_t *) SCREEN;
-    // GFX.ZBuffer = (uint8_t *) SubScreen;
+    GFX.SubScreen = GFX.Screen = (uint8_t *) SCREEN;
     GFX.ZBuffer = malloc(GFX.ZPitch * SNES_HEIGHT_EXTENDED);
     GFX.SubZBuffer = malloc(GFX.ZPitch * SNES_HEIGHT_EXTENDED);
+
     return true;
 }
 
@@ -81,7 +76,7 @@ static inline void snes9x_init() {
     Settings.HBlankStart = (256 * Settings.H_Max) / SNES_HCOUNTER_MAX;
     Settings.SoundPlaybackRate = AUDIO_SAMPLE_RATE;
     Settings.DisableSoundEcho = false;
-    Settings.InterpolatedSound = true;
+    Settings.InterpolatedSound = false;
 
     S9xInitDisplay();
 
@@ -94,7 +89,6 @@ static inline void snes9x_init() {
     S9xInitGFX();
 
     S9xSetPlaybackRate(Settings.SoundPlaybackRate);
-
     IPPU.RenderThisFrame = 1;
 }
 #if PICO_ON_DEVICE
@@ -136,14 +130,14 @@ void __time_critical_func(render_core)() {
     }
 }
 static inline void flash_timings() {
-    qmi_hw->m[0].timing = 0x60007305;
+    qmi_hw->m[0].timing = 0x60007303;
 }
 void main(){
     vreg_disable_voltage_limit();
-    vreg_set_voltage(VREG_VOLTAGE_1_70);
+    vreg_set_voltage(VREG_VOLTAGE_1_30);
     flash_timings();
     sleep_ms(100);
-    set_sys_clock_hz(504 * MHZ, true); // fallback to failsafe clocks
+    set_sys_clock_hz(315 * MHZ, true); // fallback to failsafe clocks
     sleep_ms(100);
 
         // stdio_init_all();

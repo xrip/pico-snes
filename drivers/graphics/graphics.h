@@ -69,7 +69,7 @@ void draw_text(const char string[TEXTMODE_COLS + 1], uint32_t x, uint32_t y, uin
 void draw_window(const char title[TEXTMODE_COLS + 1], uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 
 void clrScr(uint8_t color);
-
+#define RGB888(r, g, b) ((r<<16) | (g << 8 ) | b )
 #ifdef __cplusplus
 }
 #endif
