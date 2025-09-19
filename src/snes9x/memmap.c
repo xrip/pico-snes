@@ -269,7 +269,7 @@ bool LoadROM(const char* filename)
    Memory.CalculatedSize = TotalFileSize & ~0x1FFF; /* round down to lower 0x2000 */
    Memory.ExtendedFormat = NOPE;
 
-   ApplyROMPatches();
+   //ApplyROMPatches();
 
    /* CalculatedSize is now set, so rescore */
    int32_t hi_score = ScoreHiROM(false, 0);

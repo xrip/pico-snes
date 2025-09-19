@@ -251,30 +251,27 @@ int main(const int argc, char **argv) {
         printf("Usage: dendy.exe <rom.bin> [scale_factor]\n");
         return EXIT_FAILURE;
     }
-
-    const char *filename = argv[1];
-
-    Memory.ROM = (uint8_t *) malloc(sizeof(rom));
+    if (!mfb_open("SNES", SNES_WIDTH, SNES_HEIGHT, scale, MFB_FORMAT_RGB565))
+        return EXIT_FAILURE;
+    Memory.ROM = (uint8_t *) rom;
+    // memcpy(Memory.ROM, rom, sizeof(rom));
+    Memory.ROM_AllocSize = sizeof(rom);
     snes9x_init();
 
-    memcpy(Memory.ROM, rom, sizeof(rom));
-    Memory.ROM_AllocSize = sizeof(rom);
     LoadROM(NULL);
 
     // if (!LoadROM(filename))
         // printf("ROM loading failed!");
 
-    if (!mfb_open("SNES", SNES_WIDTH, SNES_HEIGHT, scale))
-        return EXIT_FAILURE;
+
 
 
     CreateThread(NULL, 0, SoundThread, NULL, 0, NULL);
-    while (true) {
+
+    do {
         S9xMainLoop();
+    } while (mfb_update(SCREEN, 60));
 
-        if (mfb_update(SCREEN, 60) == -1)
-            exit(1);
-
-    }
+    return EXIT_SUCCESS;
 }
 #endif

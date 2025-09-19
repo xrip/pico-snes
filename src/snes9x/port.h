@@ -24,7 +24,7 @@
 #ifdef PSP
 #define PIXEL_FORMAT BGR555
 #else
-#define PIXEL_FORMAT RGB555
+#define PIXEL_FORMAT RGB565
 #endif
 /* The above is used to disable the 16-bit graphics mode checks sprinkled
  * throughout the code, if the pixel format is always 16-bit. */

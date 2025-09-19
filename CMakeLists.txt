@@ -39,7 +39,7 @@ add_compile_options(
 )
 
 if (PICO_PLATFORM STREQUAL "host")
-    add_executable(${PROJECT_NAME} ${SRC} src/main.c src/win32/WinMiniFB.c)
+    add_executable(${PROJECT_NAME} ${SRC} src/main.c)
     message(WARNING "Host build!")
     target_link_libraries(${PROJECT_NAME} PRIVATE winmm)
 else ()
