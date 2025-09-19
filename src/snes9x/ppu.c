@@ -95,7 +95,6 @@ void S9xFixColourBrightness() {
       IPPU.Blue [i] = IPPU.XB [(PPU.CGDATA [i] >> 10) & 0x1f];
       // IPPU.ScreenColors [i] = i; // BUILD_PIXEL(IPPU.Red [i], IPPU.Green [i], IPPU.Blue [i]);
          graphics_set_palette(i, RGB888(IPPU.Red [i] << 3, IPPU.Green [i] << 3, IPPU.Blue [i] << 3));
-         IPPU.dirtyColors[i] = 0;
    }
    // for (size_t p = 0; p < 8; p++)
       // for (size_t c = 0; c < 256; c++)
