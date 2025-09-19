@@ -54,6 +54,7 @@ else ()
     add_subdirectory(sparkfun_pico)
     add_subdirectory(drivers/audio)
     add_subdirectory(drivers/hdmi)
+#    add_subdirectory(drivers/vga-nextgen)
     add_subdirectory(drivers/graphics)
 #    add_subdirectory(drivers/ntsc-tv)
 
@@ -67,6 +68,7 @@ else ()
 
             audio
             graphics
+#            vga-nextgen
             hdmi
 
             -Wl,--wrap=atexit,--wrap=abort,--strip-all,--gc-sections # size optimizations
@@ -75,6 +77,7 @@ else ()
     target_compile_definitions(${PROJECT_NAME} PRIVATE
             PICO_FLASH_SIZE_BYTES=16777216
             HDMI
+            #            VGA
 #            AUDIO_PWM_PIN=26
             AUDIO_DATA_PIN=26
             AUDIO_CLOCK_PIN=27

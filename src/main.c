@@ -130,6 +130,7 @@ void __time_critical_func(render_core)() {
 
     uint32_t old_buffer = current_buffer;
     while (true) {
+        // TODO: Всю обработку звука вынести на второе ядро
         if (old_buffer != current_buffer) {
             // APU_EXECUTE();
             S9xMixSamples((void *) audioBuffer, AUDIO_BUFFER_LENGTH * 2);
