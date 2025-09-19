@@ -67,7 +67,8 @@ enum graphics_mode_t {
 #ifndef NTSC_PIN_OUTPUT
 #define NTSC_PIN_OUTPUT 22
 #endif
-extern uint16_t __attribute__((aligned (4))) SCREEN[256*239];
+extern uint16_t __attribute__((aligned (4))) SCREEN[2][256*239];
+extern volatile uint32_t current_buffer;
 // Graphics framebuffer - stores raw pixel data for the display
 // Aligned to the 4-byte boundary for efficient DMA transfers
 // static uint8_t ntsc_framebuffer[NTSC_FRAME_WIDTH * NTSC_FRAME_HEIGHT] __attribute__ ((aligned (4)));
@@ -152,7 +153,7 @@ static inline void ntsc_generate_scanline(uint16_t *output_buffer, const size_t 
 #endif
 
         const uint16_t y = scanline_number - (NTSC_VSYNC_LINES + NTSC_VBLANK_TOP);
-                const uint16_t *line_buffer = &SCREEN[__fast_mul(y, 256)];
+                const uint16_t *line_buffer = &SCREEN[current_buffer][__fast_mul(y, 256)];
                 uint32_t *buffer32 = (uint32_t *)buffer_ptr;
                 uint8_t phase_offset = 0;
                 for (int x = 0; x < 256; x++) {

@@ -74,13 +74,13 @@ void __time_critical_func() dma_handler_VGA() {
     dma_hw->ints0 = 1u << dma_chan_ctrl;
     static uint32_t frame_number = 0;
     static uint32_t screen_line = 0;
-    static uint8_t* input_buffer = NULL;
+    static uint16_t* input_buffer = NULL;
     screen_line++;
 
     if (screen_line == N_lines_total) {
         screen_line = 0;
         frame_number++;
-        input_buffer = graphics_buffer;
+        input_buffer = (uint16_t *)graphics_buffer;
     }
 
     if (screen_line >= N_lines_visible) {
@@ -208,7 +208,7 @@ void __time_critical_func() dma_handler_VGA() {
     // uint8_t* vbuf8=vbuf+(line*g_buf_width/2); //4bit buf
     //uint8_t* vbuf8=vbuf+(line*g_buf_width/4); //2bit buf
     //uint8_t* vbuf8=vbuf+((line&1)*8192+(line>>1)*g_buf_width/4);
-    uint8_t* input_buffer_8bit = input_buffer + y / 2 * 80 + (y & 1) * 8192;
+    uint8_t* input_buffer_8bit = (uint8_t *)input_buffer + y / 2 * 80 + (y & 1) * 8192;
 
 
     //output_buffer = &lines_pattern[2 + ((line_number) & 1)];
@@ -309,12 +309,13 @@ void __time_critical_func() dma_handler_VGA() {
             break;
         }
         // Это только для sega
-        case GRAPHICSMODE_DEFAULT:
-            input_buffer_8bit = input_buffer + y * width;
+        case GRAPHICSMODE_DEFAULT: {
+            uint16_t * input_buffer_8bit = input_buffer + y * width;
             for (int i = width; i--;) {
-                *output_buffer_16bit++ = current_palette[*input_buffer_8bit++ & 0x1F];
+                *output_buffer_16bit++ = current_palette[*input_buffer_8bit++ & 0xFF];
             }
             break;
+        }
         case GG_160x144:
             input_buffer_8bit = 48 + input_buffer + y * width;
             for (int i = 160; i--;) {

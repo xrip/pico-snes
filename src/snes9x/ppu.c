@@ -481,12 +481,12 @@ void S9xSetPPU(uint8_t Byte, uint16_t Address)
          {
             FLUSH_REDRAW();
             /* Colour data for fixed colour addition/subtraction */
-            // if (Byte & 0x80)
-               // PPU.FixedColourBlue = Byte & 0x1f;
-            // if (Byte & 0x40)
-               // PPU.FixedColourGreen = Byte & 0x1f;
-            // if (Byte & 0x20)
-               PPU.FixedColourRed = (Byte & 0x1f) << 3;
+            if (Byte & 0x80)
+               PPU.FixedColourBlue = Byte & 0x1f;
+            if (Byte & 0x40)
+               PPU.FixedColourGreen = Byte & 0x1f;
+            if (Byte & 0x20)
+               PPU.FixedColourRed = (Byte & 0x1f) ;
          }
          break;
       case 0x2133: /* Screen settings */

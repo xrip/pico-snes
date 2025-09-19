@@ -2687,7 +2687,7 @@ void S9xUpdateScreen(void)
    {
       ClipData* pClip;
 
-      GFX.FixedColour = PPU.FixedColourRed;//BUILD_PIXEL(IPPU.XB [PPU.FixedColourRed], IPPU.XB [PPU.FixedColourGreen], IPPU.XB [PPU.FixedColourBlue]);
+      GFX.FixedColour = BUILD_PIXEL(IPPU.XB [PPU.FixedColourRed], IPPU.XB [PPU.FixedColourGreen], IPPU.XB [PPU.FixedColourBlue]);
 
       /* Clear the z-buffer, marking areas 'covered' by the fixed
        * colour as depth 1. */
