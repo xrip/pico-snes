@@ -204,7 +204,7 @@ typedef struct
 void S9xUpdateScreen(void);
 void S9xResetPPU(void);
 void S9xSoftResetPPU(void);
-void S9xFixColourBrightness(bool force);
+void S9xFixColourBrightness();
 void S9xUpdateJoypads(void);
 void S9xProcessMouse(int32_t which1);
 void S9xSuperFXExec(void);

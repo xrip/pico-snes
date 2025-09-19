@@ -91,7 +91,7 @@ bool S9xLoadState(const char *filename)
    IPPU.ColorsChanged = true;
    IPPU.OBJChanged = true;
    CPU.InDMA = false;
-   S9xFixColourBrightness(true);
+   S9xFixColourBrightness();
    S9xAPUUnpackStatus();
    S9xFixSoundAfterSnapshotLoad();
    ICPU.ShiftedPB = ICPU.Registers.PB << 16;

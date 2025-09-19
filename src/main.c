@@ -23,7 +23,7 @@
 
 #include "rom.h"
 
-#define AUDIO_SAMPLE_RATE   (32000)
+#define AUDIO_SAMPLE_RATE   (22050)
 #define AUDIO_BUFFER_LENGTH (AUDIO_SAMPLE_RATE / 60 + 1)
 
 int16_t __attribute__((aligned (4))) audioBuffer[AUDIO_BUFFER_LENGTH * 2];
@@ -35,8 +35,8 @@ uint32_t current_buffer = 0;
 bool S9xInitDisplay(void) {
     GFX.Pitch = SNES_WIDTH * sizeof(uint16_t);
     GFX.ZPitch = SNES_WIDTH;
-    GFX.Screen = (uint8_t *) SCREEN[current_buffer];
-    GFX.SubScreen = (uint8_t *) SubScreen;
+    GFX.SubScreen  = GFX.Screen = (uint8_t *) SCREEN[current_buffer];
+    // GFX.SubScreen = (uint8_t *) SubScreen;
     GFX.ZBuffer = (uint8_t *) ZBuffer;
     GFX.SubZBuffer = (uint8_t *) SubZBuffer;
 
@@ -187,7 +187,8 @@ void main(){
 
         S9xMainLoop();
         current_buffer = !current_buffer;
-        GFX.Screen = (uint8_t *) &SCREEN[current_buffer][0];
+        // GFX.Screen = (uint8_t *) &SCREEN[current_buffer][0];
+        GFX.SubScreen  = GFX.Screen = (uint8_t *) SCREEN[current_buffer];
         // sleep_ms(16);
         // gpio_put(PICO_DEFAULT_LED_PIN, i++ & 1);
         // printf("%i\n", i);

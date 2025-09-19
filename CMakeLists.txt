@@ -73,6 +73,7 @@ else ()
     )
 #    pico_set_printf_implementation(${PROJECT_NAME} none)
     target_compile_definitions(${PROJECT_NAME} PRIVATE
+            PICO_FLASH_SIZE_BYTES=16777216
             HDMI
 #            AUDIO_PWM_PIN=26
             AUDIO_DATA_PIN=26
@@ -86,7 +87,7 @@ else ()
     )
     pico_set_linker_script(${PROJECT_NAME} "${CMAKE_SOURCE_DIR}/memmap.ld")
     pico_add_extra_outputs(${PROJECT_NAME})
-    pico_enable_stdio_usb(${PROJECT_NAME} 1)
+#    pico_enable_stdio_usb(${PROJECT_NAME} 1)
 endif ()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "${BUILD_NAME}")
