@@ -80,8 +80,8 @@ static inline void snes9x_init() {
     Settings.ControllerOption = SNES_JOYPAD;
     Settings.HBlankStart = (256 * Settings.H_Max) / SNES_HCOUNTER_MAX;
     Settings.SoundPlaybackRate = AUDIO_SAMPLE_RATE;
-    Settings.DisableSoundEcho = false;
-    Settings.InterpolatedSound = false;
+    Settings.DisableSoundEcho = true;
+    Settings.InterpolatedSound = true;
 
     S9xInitDisplay();
 
@@ -269,15 +269,16 @@ int main(const int argc, char **argv) {
     if (!mfb_open("SNES", SNES_WIDTH, SNES_HEIGHT, scale, MFB_FORMAT_RGB565))
         return EXIT_FAILURE;
 
-    Memory.ROM = (uint8_t *) rom;
+    Memory.ROM = malloc(8 << 20);
+    // Memory.ROM = (uint8_t *) rom;
     // memcpy(Memory.ROM, rom, sizeof(rom));
-    Memory.ROM_AllocSize = sizeof(rom);
+    Memory.ROM_AllocSize = 8 << 20;
     snes9x_init();
 
-    LoadROM(NULL);
+    // LoadROM(NULL);
 
-    // if (!LoadROM(filename))
-        // printf("ROM loading failed!");
+    if (!LoadROM(argv[1]))
+        printf("ROM loading failed!");
 
 
 
