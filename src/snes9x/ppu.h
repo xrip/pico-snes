@@ -32,6 +32,7 @@ typedef struct
 
 typedef struct
 {
+   uint8_t dirtyColors[256];
    bool     ColorsChanged;
    uint8_t  HDMA;
    bool     OBJChanged;
@@ -203,7 +204,7 @@ typedef struct
 void S9xUpdateScreen(void);
 void S9xResetPPU(void);
 void S9xSoftResetPPU(void);
-void S9xFixColourBrightness(void);
+void S9xFixColourBrightness(bool force);
 void S9xUpdateJoypads(void);
 void S9xProcessMouse(int32_t which1);
 void S9xSuperFXExec(void);
@@ -437,7 +438,8 @@ static INLINE void REGISTER_2122(uint8_t Byte)
          IPPU.ColorsChanged = true;
          IPPU.Blue [PPU.CGADD] = IPPU.XB [(Byte >> 2) & 0x1f];
          IPPU.Green [PPU.CGADD] = IPPU.XB [(PPU.CGDATA[PPU.CGADD] >> 5) & 0x1f];
-         IPPU.ScreenColors [PPU.CGADD] = (uint16_t) BUILD_PIXEL(IPPU.Red [PPU.CGADD], IPPU.Green [PPU.CGADD], IPPU.Blue [PPU.CGADD]);
+         IPPU.dirtyColors[PPU.CGADD] = 1;
+         //IPPU.ScreenColors [PPU.CGADD] = (uint16_t) BUILD_PIXEL(IPPU.Red [PPU.CGADD], IPPU.Green [PPU.CGADD], IPPU.Blue [PPU.CGADD]);
       }
       PPU.CGADD++;
    }
@@ -449,7 +451,8 @@ static INLINE void REGISTER_2122(uint8_t Byte)
       IPPU.ColorsChanged = true;
       IPPU.Red [PPU.CGADD] = IPPU.XB [Byte & 0x1f];
       IPPU.Green [PPU.CGADD] = IPPU.XB [(PPU.CGDATA[PPU.CGADD] >> 5) & 0x1f];
-      IPPU.ScreenColors [PPU.CGADD] = (uint16_t) BUILD_PIXEL(IPPU.Red [PPU.CGADD], IPPU.Green [PPU.CGADD], IPPU.Blue [PPU.CGADD]);
+      IPPU.dirtyColors[PPU.CGADD] = 1;
+      // IPPU.ScreenColors [PPU.CGADD] = (uint16_t) BUILD_PIXEL(IPPU.Red [PPU.CGADD], IPPU.Green [PPU.CGADD], IPPU.Blue [PPU.CGADD]);
    }
    PPU.CGFLIP = !PPU.CGFLIP;
 }

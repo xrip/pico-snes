@@ -179,7 +179,7 @@ bool S9xInitGFX(void)
    DrawHiResClippedTilePtr = DrawClippedTile16;
    GFX.PPL = GFX.Pitch >> 1;
    GFX.PPLx2 = GFX.Pitch;
-   S9xFixColourBrightness();
+   S9xFixColourBrightness(true);
 
 #ifndef NO_ZERO_LUT
    if (!(GFX.ZERO = (uint16_t*) malloc(sizeof(uint16_t) * 0x10000)))
@@ -342,9 +342,11 @@ void S9xEndScreenRefresh(void)
       FLUSH_REDRAW();
       if (IPPU.ColorsChanged)
       {
+         S9xFixColourBrightness(true);
          uint32_t saved = PPU.CGDATA[0];
          IPPU.ColorsChanged = false;
          PPU.CGDATA[0] = saved;
+
       }
 
       GFX.Pitch = GFX.Pitch2 = GFX.RealPitch;

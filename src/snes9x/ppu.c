@@ -85,7 +85,7 @@ void S9xUpdateHTimer()
    }
 }
 
-void S9xFixColourBrightness()
+void S9xFixColourBrightness(bool force)
 {
    IPPU.XB = mul_brightness [PPU.Brightness];
    for (size_t i = 0; i < 256; i++)
@@ -93,10 +93,12 @@ void S9xFixColourBrightness()
       IPPU.Red [i] = IPPU.XB [PPU.CGDATA [i] & 0x1f];
       IPPU.Green [i] = IPPU.XB [(PPU.CGDATA [i] >> 5) & 0x1f];
       IPPU.Blue [i] = IPPU.XB [(PPU.CGDATA [i] >> 10) & 0x1f];
-      IPPU.ScreenColors [i] = i; // BUILD_PIXEL(IPPU.Red [i], IPPU.Green [i], IPPU.Blue [i]);
-      graphics_set_palette(i, RGB888(IPPU.Red [i] * 3, IPPU.Green [i] * 3, IPPU.Blue [i] * 3));
+      // IPPU.ScreenColors [i] = i; // BUILD_PIXEL(IPPU.Red [i], IPPU.Green [i], IPPU.Blue [i]);
+      if (force || IPPU.dirtyColors[i]) {
+         graphics_set_palette(i, RGB888(IPPU.Red [i] * 3, IPPU.Green [i] * 3, IPPU.Blue [i] * 3));
+         IPPU.dirtyColors[i] = 0;
+      }
    }
-
    for (size_t p = 0; p < 8; p++)
       for (size_t c = 0; c < 256; c++)
          IPPU.DirectColors [p * 256 + c] = c; //BUILD_PIXEL(((c & 7) << 2) | ((p & 1) << 1), ((c & 0x38) >> 1) | (p & 2), ((c & 0xc0) >> 3) | (p & 4)); /* XXX: Brightness */
@@ -120,7 +122,7 @@ void S9xSetPPU(uint8_t Byte, uint16_t Address)
             {
                IPPU.ColorsChanged = true;
                PPU.Brightness = Byte & 0xF;
-               S9xFixColourBrightness();
+               //S9xFixColourBrightness(false);
             }
             if ((Memory.FillRAM[0x2100] & 0x80) != (Byte & 0x80))
             {
@@ -1669,7 +1671,7 @@ static void CommonPPUReset()
    IPPU.XB = NULL;
    for (c = 0; c < 256; c++)
       IPPU.ScreenColors [c] = c;
-   S9xFixColourBrightness();
+   S9xFixColourBrightness(true);
    IPPU.PreviousLine = IPPU.CurrentLine = 0;
 
    if (Settings.ControllerOption == 0)

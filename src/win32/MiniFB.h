@@ -101,8 +101,8 @@ static int mfb_open(const char *title, const int width, const int height, const 
     mfb.hwnd = CreateWindowEx(
         0, title, title,
         WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX & ~WS_THICKFRAME,
-        (GetSystemMetrics(SM_CXSCREEN) - (rect.right - rect.left)) / 2,
-        (GetSystemMetrics(SM_CYSCREEN) - (rect.bottom - rect.top)) / 2,
+        -1980  + (GetSystemMetrics(SM_CXSCREEN) - (rect.right - rect.left)) / 2,
+        +200  + (GetSystemMetrics(SM_CYSCREEN) - (rect.bottom - rect.top)) / 2,
         rect.right - rect.left, rect.bottom - rect.top,
         NULL, NULL, NULL, NULL
     );
@@ -113,7 +113,7 @@ static int mfb_open(const char *title, const int width, const int height, const 
     mfb.hdc = GetDC(mfb.hwnd);
 
     // Setup BITMAPINFO
-    mfb.bitmap_info = (BITMAPINFO *)calloc(1, sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * 256);
+    mfb.bitmap_info = (BITMAPINFO *)malloc(256 * sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD));
     mfb.bitmap_info->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     mfb.bitmap_info->bmiHeader.biWidth = width;
     mfb.bitmap_info->bmiHeader.biHeight = -height; // top-down
@@ -122,7 +122,18 @@ static int mfb_open(const char *title, const int width, const int height, const 
     switch (format) {
         case MFB_FORMAT_INDEXED8:
             mfb.bitmap_info->bmiHeader.biBitCount = 8;
+            mfb.bitmap_info->bmiHeader.biClrUsed = 256;
             mfb.bitmap_info->bmiHeader.biCompression = BI_RGB;
+            RGBQUAD* palette = &mfb.bitmap_info->bmiColors[0];
+            for (int i = 0; i < 256; ++i)
+            {
+            RGBQUAD rgb = {0};
+            rgb.rgbRed =  ~i;
+            rgb.rgbGreen =  ~i;
+            rgb.rgbBlue =  ~i;
+            palette[i] = rgb;
+            }
+
             break;
         case MFB_FORMAT_RGB555:
             mfb.bitmap_info->bmiHeader.biBitCount = 16;
@@ -150,7 +161,7 @@ static int mfb_open(const char *title, const int width, const int height, const 
 //////////////////////////////////////////////////////////////////
 // PALETTE
 //////////////////////////////////////////////////////////////////
-static void mfb_set_palette(const uint8_t index, const uint32_t color) {
+static inline void mfb_set_palette(const uint8_t index, const uint32_t color) {
     if (mfb.color_format != MFB_FORMAT_INDEXED8) return;
     ((DWORD *)mfb.bitmap_info->bmiColors)[index] = color;
 }

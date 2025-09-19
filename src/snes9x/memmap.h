@@ -103,9 +103,9 @@ typedef struct
 
 typedef struct
 {
-   uint8_t RAM[RAM_SIZE];
+   uint8_t *RAM;
    uint8_t* ROM;
-   uint8_t VRAM[VRAM_SIZE];
+   uint8_t *VRAM;
    uint8_t* SRAM;
    uint8_t* FillRAM;
    uint8_t* C4RAM;

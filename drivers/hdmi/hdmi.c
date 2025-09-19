@@ -36,8 +36,8 @@ static int graphics_buffer_shift_y = 0;
 //текстовый буфер
 uint8_t* text_buffer = NULL;
 
-extern uint16_t __attribute__((aligned (4))) SCREEN[];
-
+extern uint16_t __attribute__((aligned (4))) SCREEN[2][256*239];
+extern uint32_t current_buffer;
 //DMA каналы
 //каналы работы с первичным графическим буфером
 static int dma_chan_ctrl;
@@ -62,7 +62,7 @@ static uint32_t irq_inx = 0;
 
 //функции и константы HDMI
 
-#define BASE_HDMI_CTRL_INX (240)
+#define BASE_HDMI_CTRL_INX (251)
 //программа конвертации адреса
 
 uint16_t pio_program_instructions_conv_HDMI[] = {
@@ -181,49 +181,19 @@ static void __scratch_y("hdmi_driver") dma_handler_HDMI() {
 
     uint8_t* activ_buf = (uint8_t *)dma_lines[inx_buf_dma & 1];
 
-    if (graphics_buffer && line < 480 ) {
+    if (line < (239*2) ) {
         //область изображения
-        uint8_t* input_buffer =  &graphics_buffer[(line / 2) * graphics_buffer_width];
         uint8_t* output_buffer = activ_buf + 72; //для выравнивания синхры;
-        int y = line / 2;
-        switch (graphics_mode) {
-            case TEXTMODE_DEFAULT:
-            case TEXTMODE_53x30: {
-                *output_buffer++ = 255;
 
-                for (int x = 0; x < TEXTMODE_COLS; x++) {
-                    const uint16_t offset = (y / 8) * (TEXTMODE_COLS * 2) + x * 2;
-                    const uint8_t c = text_buffer[offset];
-                    const uint8_t colorIndex = text_buffer[offset + 1];
-                    uint8_t glyph_row = font_6x8[c * 8 + y % 8];
-
-                    for (int bit = 6; bit--;) {
-                        *output_buffer++ = glyph_row & 1
-                                               ? textmode_palette[colorIndex & 0xf] //цвет шрифта
-                                               : textmode_palette[colorIndex >> 4]; //цвет фона
-
-                        glyph_row >>= 1;
-                    }
-                }
-                *output_buffer = 255;
-                break;
-            }
-            default: {
                 memset(output_buffer, 0, 32);
                 output_buffer+=32;
-                const uint16_t * input = (uint16_t*)&SCREEN[line / 2 * graphics_buffer_width];
+                const uint16_t * input = (uint16_t*)&SCREEN[!current_buffer][line / 2 * graphics_buffer_width];
                 for (int i = graphics_buffer_width; i--;) {
-                    uint8_t i_color = *input;
-                    i_color = (i_color & 0xf0) == 0xf0 ? 255 : i_color;
-                    *output_buffer++ = i_color;
-                    input++;
+                    const uint8_t i_color = *input++;
+                    *output_buffer++ = (i_color >= BASE_HDMI_CTRL_INX) ? 0 : i_color;
                 }
                 memset(output_buffer, 0, 32);
-                break;
 
-
-            }
-        }
 
 
         // memset(activ_buf,2,320);//test

@@ -27,14 +27,18 @@
 #define AUDIO_BUFFER_LENGTH (AUDIO_SAMPLE_RATE / 60 + 1)
 
 int16_t __attribute__((aligned (4))) audioBuffer[AUDIO_BUFFER_LENGTH * 2];
-uint16_t __attribute__((aligned (4))) SCREEN[SNES_WIDTH * SNES_HEIGHT_EXTENDED];
-
+uint16_t __attribute__((aligned (4))) SCREEN[2][SNES_WIDTH * SNES_HEIGHT_EXTENDED];
+uint16_t __attribute__((aligned (4))) SubScreen[SNES_WIDTH * SNES_HEIGHT_EXTENDED];
+uint8_t __attribute__((aligned (4))) ZBuffer[SNES_WIDTH * SNES_HEIGHT_EXTENDED];
+uint8_t __attribute__((aligned (4))) SubZBuffer[SNES_WIDTH * SNES_HEIGHT_EXTENDED];
+uint32_t current_buffer = 0;
 bool S9xInitDisplay(void) {
     GFX.Pitch = SNES_WIDTH * sizeof(uint16_t);
     GFX.ZPitch = SNES_WIDTH;
-    GFX.SubScreen = GFX.Screen = (uint8_t *) SCREEN;
-    GFX.ZBuffer = malloc(GFX.ZPitch * SNES_HEIGHT_EXTENDED);
-    GFX.SubZBuffer = malloc(GFX.ZPitch * SNES_HEIGHT_EXTENDED);
+    GFX.Screen = (uint8_t *) SCREEN[current_buffer];
+    GFX.SubScreen = (uint8_t *) SubScreen;
+    GFX.ZBuffer = (uint8_t *) ZBuffer;
+    GFX.SubZBuffer = (uint8_t *) SubZBuffer;
 
     return true;
 }
@@ -87,7 +91,7 @@ static inline void snes9x_init() {
     S9xInitSound(0, 0);
 
     S9xInitGFX();
-
+    // GFX.SubScreen = malloc(GFX.Pitch * SNES_HEIGHT_EXTENDED);
     S9xSetPlaybackRate(Settings.SoundPlaybackRate);
     IPPU.RenderThisFrame = 1;
 }
@@ -130,14 +134,14 @@ void __time_critical_func(render_core)() {
     }
 }
 static inline void flash_timings() {
-    qmi_hw->m[0].timing = 0x60007303;
+    qmi_hw->m[0].timing = 0x60007305;
 }
 void main(){
     vreg_disable_voltage_limit();
-    vreg_set_voltage(VREG_VOLTAGE_1_30);
+    vreg_set_voltage(VREG_VOLTAGE_1_70);
     flash_timings();
     sleep_ms(100);
-    set_sys_clock_hz(315 * MHZ, true); // fallback to failsafe clocks
+    set_sys_clock_hz(504 * MHZ, true); // fallback to failsafe clocks
     sleep_ms(100);
 
         // stdio_init_all();
@@ -174,7 +178,7 @@ void main(){
 
     snes9x_init();
     gpio_put(PICO_DEFAULT_LED_PIN, 1);
-    memcpy(Memory.ROM, rom, rom_size);
+    // memcpy(Memory.ROM, rom, rom_size);
     LoadROM(NULL);
 
     multicore_launch_core1(render_core);
@@ -182,6 +186,8 @@ void main(){
     while (true) {
 
         S9xMainLoop();
+        current_buffer = !current_buffer;
+        GFX.Screen = (uint8_t *) &SCREEN[current_buffer][0];
         // sleep_ms(16);
         // gpio_put(PICO_DEFAULT_LED_PIN, i++ & 1);
         // printf("%i\n", i);
@@ -253,6 +259,7 @@ int main(const int argc, char **argv) {
     }
     if (!mfb_open("SNES", SNES_WIDTH, SNES_HEIGHT, scale, MFB_FORMAT_RGB565))
         return EXIT_FAILURE;
+
     Memory.ROM = (uint8_t *) rom;
     // memcpy(Memory.ROM, rom, sizeof(rom));
     Memory.ROM_AllocSize = sizeof(rom);

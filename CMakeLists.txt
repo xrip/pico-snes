@@ -26,7 +26,7 @@ endforeach ()
 message(STATUS "")
 
 #add_compile_options(-funroll-loops -fms-extensions -O3)
-add_link_options(-flto -fwhole-program)
+#add_link_options(-flto -fwhole-program)
 # -frename-registers -fno-tree-vectorize
 add_compile_options(
 #        -flto=auto
@@ -53,9 +53,9 @@ else ()
 
     add_subdirectory(sparkfun_pico)
     add_subdirectory(drivers/audio)
-#    add_subdirectory(drivers/hdmi)
-#    add_subdirectory(drivers/graphics)
-    add_subdirectory(drivers/ntsc-tv)
+    add_subdirectory(drivers/hdmi)
+    add_subdirectory(drivers/graphics)
+#    add_subdirectory(drivers/ntsc-tv)
 
     add_executable(${PROJECT_NAME} ${SRC} src/main.c)
 
@@ -67,19 +67,19 @@ else ()
 
             audio
             graphics
-#            hdmi
+            hdmi
 
             -Wl,--wrap=atexit,--wrap=abort,--strip-all,--gc-sections # size optimizations
     )
 #    pico_set_printf_implementation(${PROJECT_NAME} none)
     target_compile_definitions(${PROJECT_NAME} PRIVATE
             HDMI
-            AUDIO_PWM_PIN=26
+#            AUDIO_PWM_PIN=26
             AUDIO_DATA_PIN=26
             AUDIO_CLOCK_PIN=27
 
             # Core definitions
-#            PICO_PRINTF_ALWAYS_INCLUDED=0
+            PICO_PRINTF_ALWAYS_INCLUDED=0
             PICO_PANIC_FUNCTION=
 
             SFE_RP2350_XIP_CSI_PIN=19

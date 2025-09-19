@@ -145,9 +145,9 @@ bool S9xInitMemory(void)
    IPPU.ScreenColors = (uint16_t *)calloc(256 * 9, sizeof(uint16_t));
    IPPU.DirectColors = IPPU.ScreenColors + 256;
 
-   // Memory.RAM   = (uint8_t*)malloc(RAM_SIZE);
+   Memory.RAM   = (uint8_t*)malloc(RAM_SIZE);
    Memory.SRAM  = (uint8_t*)malloc(SRAM_SIZE);
-   // Memory.VRAM  = (uint8_t*)malloc(VRAM_SIZE);
+   Memory.VRAM  = (uint8_t*)malloc(VRAM_SIZE);
    Memory.FillRAM = (uint8_t*)malloc(0x8000);
    bytes0x2000 = (uint8_t *)malloc(0x2000);
 
