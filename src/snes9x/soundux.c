@@ -756,6 +756,7 @@ stereo_exit:;
 
 void S9xMixSamples(int16_t* buffer, int32_t sample_count)
 {
+
    int32_t J;
    int32_t I;
 

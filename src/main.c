@@ -32,7 +32,7 @@ uint16_t __attribute__((aligned (4))) SCREEN[2][SNES_WIDTH * SNES_HEIGHT_EXTENDE
 uint8_t __attribute__((aligned (4))) ZBuffer[SNES_WIDTH * SNES_HEIGHT_EXTENDED];
 uint8_t __attribute__((aligned (4))) SubZBuffer[SNES_WIDTH * SNES_HEIGHT_EXTENDED];
 
-uint32_t current_buffer = 0;
+volatile uint32_t current_buffer = 0;
 bool S9xInitDisplay(void) {
     GFX.Pitch = SNES_WIDTH * sizeof(uint16_t);
     GFX.ZPitch = SNES_WIDTH;
@@ -108,10 +108,10 @@ static void memory_stats()
     size_t max_block = sfe_mem_max_free_size();
     printf("\tMax free block size: 0x%X (%u) \n", max_block, max_block);
 }
-i2s_config_t i2s_config;
+
 /* Renderer loop on Pico's second core */
 void __time_critical_func(render_core)() {
-    i2s_config = i2s_get_default_config();
+    i2s_config_t i2s_config = i2s_get_default_config();
     i2s_config.sample_freq = AUDIO_SAMPLE_RATE;
     i2s_config.dma_trans_count = AUDIO_SAMPLE_RATE / 60;
     i2s_volume(&i2s_config, 0);
@@ -128,10 +128,16 @@ void __time_critical_func(render_core)() {
     graphics_set_flashmode(false, false);
     graphics_set_mode(GRAPHICSMODE_DEFAULT);
 
+    uint32_t old_buffer = current_buffer;
     while (true) {
-        S9xMixSamples((void *) audioBuffer, AUDIO_BUFFER_LENGTH * 2);
-        i2s_dma_write(&i2s_config, (const int16_t *) audioBuffer);
-        busy_wait_us(16666);
+        if (old_buffer != current_buffer) {
+            // APU_EXECUTE();
+            S9xMixSamples((void *) audioBuffer, AUDIO_BUFFER_LENGTH * 2);
+            i2s_dma_write(&i2s_config, (const int16_t *) audioBuffer);
+            old_buffer = current_buffer;
+        }
+
+        tight_loop_contents();
     }
 }
 static inline void flash_timings() {
