@@ -28,9 +28,10 @@
 
 int16_t __attribute__((aligned (4))) audioBuffer[AUDIO_BUFFER_LENGTH * 2];
 uint16_t __attribute__((aligned (4))) SCREEN[2][SNES_WIDTH * SNES_HEIGHT_EXTENDED];
-uint16_t __attribute__((aligned (4))) SubScreen[SNES_WIDTH * SNES_HEIGHT_EXTENDED];
+// uint16_t __attribute__((aligned (4))) SubScreen[SNES_WIDTH * SNES_HEIGHT_EXTENDED];
 uint8_t __attribute__((aligned (4))) ZBuffer[SNES_WIDTH * SNES_HEIGHT_EXTENDED];
 uint8_t __attribute__((aligned (4))) SubZBuffer[SNES_WIDTH * SNES_HEIGHT_EXTENDED];
+
 uint32_t current_buffer = 0;
 bool S9xInitDisplay(void) {
     GFX.Pitch = SNES_WIDTH * sizeof(uint16_t);
